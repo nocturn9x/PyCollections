@@ -173,6 +173,8 @@ class NamedTuple(tuple):
                         self.formatted_args += f"{key}='{kwargs[key]}'"
             self.formatted_args += ")"
             self.create_tuple()
+        else:
+            self.formatted_args = "()"
 
     def create_tuple(self):
         """This function memorizes all the required
@@ -183,10 +185,19 @@ class NamedTuple(tuple):
             key, value = arg.split("=")
             if value.isdigit():
                 value = int(value)
+            elif self.isfloat(value):
+                value = self.isfloat(value)
             self._dict[key] = value
         self._container = tuple(item[1] for item in self._dict.items())
         for item in self._dict.items():
             self._indexes[item[0]] = self._container.index(item[1])
+
+    @staticmethod
+    def isfloat(value):  #Thanks to https://www.geeksforgeeks.org/python-check-for-float-string/
+        if value.replace('.', '', 1).isdigit():
+            return float(value)
+        else:
+            return False
 
     def __str__(self):
         return self.formatted_args
