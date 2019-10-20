@@ -1,7 +1,7 @@
-from errors.exceptions import errors
+from py_collections.exceptions import *
+import threading
 
-
-class ConstantDict:
+class ConstantDict(dict):
     """This class implements a 'constant' (or immutable) Mapping, we'll face
        those apexes in a second.
 
@@ -31,7 +31,7 @@ class ConstantDict:
        immutable: it just overwrites any known standard method
        to access mappings values and edit them, but it is still
        possible to edit those values by accessing the class
-       attribute via {object}_ConstantDict__d.
+       attribute via {object}_ConstantDict__container.
 
        This mapping is indeed intended to reduce the probability of ACCIDENTALLY overwriting those
        values, if you are looking for immutable objects natively, just
@@ -41,12 +41,12 @@ class ConstantDict:
         """Initializes self"""
 
         self.as_dict = False
-        self.__d = dict()  # This attribute MUST NOT BE TOUCHED
+        self.__container = dict()  # This attribute MUST NOT BE TOUCHED
 
     def __dir__(self):
         """Overrides dir(object)"""
 
-        raise errors.AccessDeniedError("Access Denied")
+        raise AccessDeniedError("Access Denied")
 
     @property
     def __dict__(self):
@@ -56,7 +56,7 @@ class ConstantDict:
            Overriding the __dict__ attribute with a property
            ensures that the ConstantDict values remain unchanged"""
 
-        raise errors.AccessDeniedError("Access Denied")
+        raise AccessDeniedError("Access Denied")
 
     @property
     def __class__(self):
@@ -66,7 +66,7 @@ class ConstantDict:
            see below 'typeof' property for more detailed info"""
 
         if self.as_dict:
-            return type(self.__d)
+            return type(self.__container)
         else:
             return type(self)
 
@@ -75,8 +75,8 @@ class ConstantDict:
         """The ConstantDict class is built so that it can emulate
            Python dicts, by manipulating the value returned by the __class__ parameter
 
-           To pass isinstance() check, use ConstantDict.typeof() as first argument,
-       otherwise just use ConstantDict.typeof (Notice the absence of parenthesis)"""
+           To pass isinstance() check, use ConstantDict.typeof() as first argument, after
+           having called act_as_dict() on the container"""
 
         return self.__class__
 
@@ -102,31 +102,31 @@ class ConstantDict:
            >>> del d["foo"]
              raises  ConstantError"""
 
-        raise errors.ConstantError("Operation not permitted")
+        raise InvalidOperation("Operation not permitted")
 
     def __setitem__(self, key, value):
         """Overrides the standard __setitem__ bound method for dicts,
            disallowing the user to edit already existing values inside the container"""
 
-        if key in self.__d:
-            raise errors.ConstantError(f"Cannot overwrite existing key. Value for '{key}' is already '{self.__d[key]}'")
+        if key in self.__container:
+            raise ConstantError(f"Cannot overwrite existing key. Value for '{key}' is already '{self.__container[key]}'")
         else:
-            self.__d[key] = value
+            self.__container[key] = value
 
     def __iter__(self):
-        return self.__d.__iter__()
+        return self.__container.__iter__()
 
     def __getitem__(self, key):
-        return self.__d.__getitem__(key)
+        return self.__container.__getitem__(key)
 
     def __len__(self):
-        return self.__d.__len__()
+        return self.__container.__len__()
 
     def __contains__(self, item):
-        return dict.__contains__(self.__d, item)
+        return self.__container.__contains__(item)
 
     def __repr__(self):
-        return str(self.__d)
+        return str(self.__container)
 
 
 class NamedTuple(tuple):
@@ -158,6 +158,7 @@ class NamedTuple(tuple):
         self._container = None  # Tuple to be initialized yet
         self._dict = dict()  # Here the key-word couples arguments will be stored
         self._indexes = dict()  # The numerical indexes for every item in the tuple are saved with their corresponding keyword
+        self._as_tuple = False
         if kwargs:
             self.formatted_args = "("
             for index, key in enumerate(kwargs):
@@ -193,7 +194,7 @@ class NamedTuple(tuple):
             self._indexes[item[0]] = self._container.index(item[1])
 
     @staticmethod
-    def isfloat(value):  #Thanks to https://www.geeksforgeeks.org/python-check-for-float-string/
+    def isfloat(value):  # Thanks to https://www.geeksforgeeks.org/python-check-for-float-string/
         if value.replace('.', '', 1).isdigit():
             return float(value)
         else:
@@ -222,6 +223,9 @@ class NamedTuple(tuple):
     def __len__(self):
         return self._container.__len__()
 
+    def __copy__(self):
+        return self._container
+
     def find(self, item):
         """This function finds an element inside the tuple,
         given the item numerical index or a key"""
@@ -247,3 +251,340 @@ class NamedTuple(tuple):
             items.append(item[1])
         return items
 
+    @property
+    def __class__(self):
+        """This property returns the type of the NamedTuple.
+
+           The class is built so that it can emulate Python lists,
+           see below 'typeof' property for more detailed info"""
+
+        if self._as_tuple:
+            return type(self._container)
+        else:
+            return type(self)
+
+    @property
+    def typeof(self):
+        """The NamedTuple class is built so that it can emulate
+           Python lists, by manipulating the value returned by the __class__ parameter
+
+           To pass isinstance() check, use NamedTuple.typeof() as first argument,
+           after having called act_as_tuple() on the container"""
+
+        return self.__class__
+
+    def act_as_tuple(self):
+        """Bound method to activate/deactivate Python tuple emulation.
+
+           See 'typeof' and '__class__' properties for more info"""
+
+        if self._as_tuple:
+            self._as_tuple = False
+        else:
+            self._as_tuple = True
+        return self._as_tuple
+
+
+class LockedList(list):
+
+    def __init__(self, *args):
+        self._container = [*args]
+        self._status = False  # Initialized to unlocked state
+        self._as_list = False
+
+    def __getitem__(self, item):
+        if not self._status:
+            return self._container.__getitem__(item)
+        else:
+            raise LockedListError("list is locked")
+
+    def __getattribute__(self, item):
+        return super().__getattribute__(item)
+
+    def __delitem__(self, item):
+        if not self._status:
+            return self._container.__delitem__(item)
+        else:
+            raise LockedListError("list is locked")
+
+    def __add__(self, other):
+        return self._container.__add__(other)
+
+    def __mul__(self, other):
+        return self._container.__add__(other)
+
+    def __iadd__(self, other):
+        return self._container.__iadd__(other)
+
+    def __imul__(self, other):
+        return self._container.__imul__(other)
+
+    def __reversed__(self):
+        return self._container.__reversed__()
+
+    def append(self, item):
+        if not self._status:
+            self._container.append(item)
+        else:
+            raise LockedListError("list is locked")
+
+    def lock(self):
+        if not self._status:
+            self._status = True
+            return True
+        else:
+            raise InvalidOperation("list is already locked")
+
+    def unlock(self):
+        if self._status:
+            self._status = False
+            return True
+        else:
+            raise UnlockedListError("list is not locked")
+
+    @property
+    def status(self):
+        return self._status
+
+    def extend(self, iterable):
+        if not self._status:
+            self._container.extend(iterable)
+        else:
+            raise LockedListError("list is locked")
+
+    def __iter__(self):
+        if not self._status:
+            return self._container.__iter__()
+        else:
+            raise LockedListError("list is locked")
+
+    def __contains__(self, item):
+        return self._container.__contains__(item)
+
+    def __len__(self):
+        return self._container.__len__()
+
+    def __copy__(self):
+        return self._container
+
+    def __str__(self):
+        return str(self._container)
+
+    def __repr__(self):
+        return str(self._container)
+
+    @property
+    def __class__(self):
+        """This property returns the type of the LockedList.
+
+           The class is built so that it can emulate Python lists,
+           see below 'typeof' property for more detailed info"""
+
+        if self._as_list:
+            return type(self._container)
+        else:
+            return type(self)
+
+    @property
+    def typeof(self):
+        """The LockedList class is built so that it can emulate
+           Python lists, by manipulating the value returned by the __class__ parameter
+
+           To pass isinstance() check, use LockedList.typeof() as first argument,
+           after having called act_as_list() on the container"""
+
+        return self.__class__
+
+    def act_as_list(self):
+        """Bound method to activate/deactivate Python list emulation.
+
+           See 'typeof' and '__class__' properties for more info"""
+
+        if self._as_list:
+            self._as_list = False
+        else:
+            self._as_list = True
+        return self._as_list
+
+    def index(self, value, start=0, stop=9223372036854775807):
+        if not self._status:
+            return self._container.index(value, start, stop)
+        else:
+            raise LockedListError("list is locked")
+
+
+class RLockedList(LockedList):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._owner = None
+
+    @property
+    def owner(self):
+        return self._owner
+
+    @property
+    def status(self):
+        return self._status
+
+    def extend(self, iterable):
+        if not self._status:
+            self._container.extend(iterable)
+        else:
+            if threading.current_thread().name == self._owner:
+                return self._container.extend(iterable)
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def __getitem__(self, item):
+        if not self._status:
+            return self._container.__getitem__(item)
+        else:
+            if threading.current_thread().name == self._owner:
+                return self._container.__getitem__(item)
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def __getattribute__(self, item):
+        if not self._status:
+            return self._container.__getattribute__(item)
+        else:
+            if threading.current_thread().name == self._owner:
+                return self._container.__getattribute__(item)
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def __delitem__(self, item):
+        if not self._status:
+            return self._container.__delitem__(item)
+        else:
+            if threading.current_thread().name == self._owner:
+                return self._container.__delitem__(item)
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def __add__(self, other):
+        if not self._status:
+            return self._container.__add__(other)
+        else:
+            if threading.current_thread().name == self._owner:
+                return self._container.__add__(other)
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def __mul__(self, other):
+        return self._container.__add__(other)
+
+    def __iadd__(self, other):
+        return self._container.__iadd__(other)
+
+    def __imul__(self, other):
+        if not self._status:
+            return self._container.__imul__(other)
+        else:
+            if threading.current_thread().name == self._owner:
+                return self._container.__imul__(other)
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def __reversed__(self):
+        if not self._status:
+            return self._container.__reversed__()
+        else:
+            if threading.current_thread().name == self._owner:
+                return self._container.__reversed__()
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def append(self, item):
+        if not self._status:
+            self._container.append(item)
+            if threading.current_thread().name == self._owner:
+                return self._container.append(item)
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def index(self, value, start=0, stop=9223372036854775807):
+        if not self._status:
+            return self._container.index(value, start, stop)
+        else:
+            if self._owner == threading.current_thread().name:
+                return self._container.index(value, start, stop)
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def acquire(self):
+        if self._owner is None:
+            self._status = True
+            self._owner = threading.current_thread().name
+        else:
+            raise InvalidOperation(f"thread '{self._owner}' didn't release the container yet")
+
+    def release(self):
+        if not self._status:
+            raise InvalidOperation("container is un-acquired")
+        else:
+            self._owner = None
+        if threading.current_thread().name == self._owner:
+            if self._status:
+                self._status = False
+                self._owner = None
+            else:
+                raise InvalidOperation("container is un-acquired")
+        else:
+            raise InvalidOperation(f"cannot release, '{threading.current_thread().name}' is not the container owner")
+
+    def __iter__(self):
+        if not self._status:
+            return self._container.__iter__()
+        else:
+            if self._owner == threading.current_thread().name:
+                return self._container.__iter__()
+            else:
+                raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
+
+    def __str__(self):
+        return super().__str__()
+
+    @property
+    def __class__(self):
+        """This property returns the type of the LockedList.
+
+           The class is built so that it can emulate Python lists,
+           see below 'typeof' property for more detailed info"""
+
+        if self._as_list:
+            return type(self._container)
+        else:
+            return type(self)
+
+    @property
+    def typeof(self):
+        """The RLockedList class is built so that it can emulate
+           Python lists, by manipulating the value returned by the __class__ parameter
+
+           To pass isinstance() check, use LockedList.typeof() as first argument, after
+           having called act_as_list() on the container"""
+
+        return self.__class__
+
+    def act_as_list(self):
+        """Bound method to activate/deactivate Python list emulation.
+
+           See 'typeof' and '__class__' properties for more info"""
+
+        if self._status:
+            if self._owner == threading.current_thread().name:
+                if self._as_list:
+                    self._as_list = False
+                else:
+                    self._as_list = True
+                return self._as_list
+            else:
+                raise AccessDeniedError(f"thread {threading.current_thread().name} is not the container owner")
+        else:
+            if self._as_list:
+                self._as_list = False
+            else:
+                self._as_list = True
+            return self._as_list

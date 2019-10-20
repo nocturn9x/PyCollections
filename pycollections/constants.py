@@ -1,4 +1,4 @@
-from errors.exceptions import errors
+from pycollectionserrors.exceptions import Errors as errors
 import inspect
 
 
