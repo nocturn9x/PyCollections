@@ -6,6 +6,10 @@ PyCollections is a Python 3 library that implements some useful containers (tupl
 
 You can find the package also on [PyPI](https://pypi.org/project/PyCollections/), though that page will be updated only when a bunch of minor fixes are made to this repo, so if you want to have always the latest (development) version of PyCollections you should check this repository, too.
 
+### Note 2
+
+The **Methods** section of every container that is documented below, contains only methods that are not present in the respective parent class. For instance, the `LockedList()` **Methods** section does not contain `append(self)` because it's inherited and reimplemented from its parent class.
+
 ## A bit of information
 
 PyCollections implements some cool containers based on Python's builtins such as lists, tuples, dicts and sets.
@@ -72,7 +76,7 @@ The tuple works as described below:
   
     `>>> test.keys()`
         
-        [key1, key2, ...]
+        ['key1', 'key2', ...]
 
   - Get tuple elements :
   
@@ -104,3 +108,25 @@ The tuple works as described below:
   - `typeof(self)` -> Returns the type of the tuple depending on the `_act_as_tuple` object attribute
   
   - `act_as_tuple(self)` -> Bound method to activate/deactivate Python tuple emulation. Returns the value of the `_act_as_tuple` instance attribute as a boolean value once called
+  
+  
+### LockedList() - Docs
+
+The LockedList() container behaves mostly like a common Python list object, except for the fact that it has a special attribute --namely, `_status`-- that can assume a boolean value, that is either `True` or `False`. When `_status` is set to `False`, the container's behaviour is the same as Python lists, but when its value equals `True`, every attempt to read/write the list will raise an exception and leave the container unmodified. This can be useful for situations where very important variables need to be preserved from being accidentally modified. 
+
+**NOTE**: The concept explained for the `ConstantDict()`'s "fake" immutability is valid also for `LockedList()`, the below `RLockedList()` and in general for every container in this library whose behaviour prevents data modification. This means that the "you can't touch this!" rule isn't valid like, e.g., for Java where the `private` or `public` reserved keywords do prevent/allow variable modification. If you need a truly immutable container, use the `collections` module, that is implemented in C, a language that supports this kind of variable behaviour. In substance, there are no immutable containers in pure Python and this is not a flaw, just an implementation choice (like the GIL or the absence of constants, but you can argue about that with Guido van Rossum).
+
+
+#### Methods
+
+  - `lock(self)` -> Sets the `_status` parameter to `True`, disallowing access to the list's items
+  
+  - `unlock(self)` -> Sets the `_status` parameter to `False`, allowing access to the list's items
+  
+  - `status(self)` -> Returns the value of the `_status` parameter
+  
+  - `act_as_list(self)` -> Bound method to activate/deactivate Python list emulation. Returns the value of the `_act_as_list` instance attribute as a boolean value once called
+  
+  - `typeof(self)` -> Returns the type of the tuple depending on the `_act_as_list` object attribute
+
+
