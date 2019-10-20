@@ -1,6 +1,7 @@
 from py_collections.exceptions import *
 import threading
 
+
 class ConstantDict(dict):
     """This class implements a 'constant' (or immutable) Mapping, we'll face
        those apexes in a second.
@@ -228,7 +229,7 @@ class NamedTuple(tuple):
 
     def find(self, item):
         """This function finds an element inside the tuple,
-        given the item numerical index or a key"""
+        given its key"""
 
         if item in self._indexes:
             return self._indexes[item]
@@ -238,18 +239,12 @@ class NamedTuple(tuple):
     def keys(self):
         """This function returns all the keys inside the tuple"""
 
-        keys = []
-        for key in self._dict.keys():
-            keys.append(key)
-        return keys
+        return list(self._dict.keys())
 
     def items(self):
         """This function returns all the values inside the tuple"""
 
-        items = []
-        for item in self._dict.items():
-            items.append(item[1])
-        return items
+        return list(self._dict.items())
 
     @property
     def __class__(self):
@@ -329,6 +324,8 @@ class LockedList(list):
             raise LockedListError("list is locked")
 
     def lock(self):
+        """Locks the list"""
+
         if not self._status:
             self._status = True
             return True
@@ -336,6 +333,8 @@ class LockedList(list):
             raise InvalidOperation("list is already locked")
 
     def unlock(self):
+        """Unlocks the list"""
+
         if self._status:
             self._status = False
             return True
@@ -344,6 +343,8 @@ class LockedList(list):
 
     @property
     def status(self):
+        """Returns the value of self._status"""
+
         return self._status
 
     def extend(self, iterable):
@@ -421,10 +422,14 @@ class RLockedList(LockedList):
 
     @property
     def owner(self):
+        """Returns the value of self._owner"""
+
         return self._owner
 
     @property
     def status(self):
+        """Returns the value of self._status"""
+
         return self._status
 
     def extend(self, iterable):
@@ -514,6 +519,9 @@ class RLockedList(LockedList):
                 raise AccessDeniedError(f"thread '{threading.current_thread().name}' is not the container owner")
 
     def acquire(self):
+        """Acquires the container, disallowing access to the list's items
+        to any thread except for the owner"""
+
         if self._owner is None:
             self._status = True
             self._owner = threading.current_thread().name
@@ -521,6 +529,8 @@ class RLockedList(LockedList):
             raise InvalidOperation(f"thread '{self._owner}' didn't release the container yet")
 
     def release(self):
+        """Releases the container, allowing access to the list's items globally"""
+
         if not self._status:
             raise InvalidOperation("container is un-acquired")
         else:
