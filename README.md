@@ -66,27 +66,27 @@ The tuple works as described below:
   
     `>>> test.find(key1)`
         
-        `'var1'`
+        'var1'
 
   - Get tuple keys :
   
     `>>> test.keys()`
         
-        `[key1, key2, ...]`
+        [key1, key2, ...]
 
   - Get tuple elements :
   
     `>>> test.items()`
         
-        `['var1', 'var2', ...]`
+        ['var1', 'var2', ...]
   
   - Get a single element :
   
-    `>>> test[0] `
+    `>>> test[0]`
     
     `>>> test["key1"]`
         
-        `'var1'`
+        'var1'
         
 #### Methods
 
