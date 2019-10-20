@@ -45,13 +45,54 @@ This mapping is indeed intended to reduce the probability of ACCIDENTALLY overwr
 values, if you are looking for immutable objects natively, just
 switch to Java :)
 
-### Methods
+#### Methods
 
-  - `act_as_dict(self)` -> Bound method to activate/deactivate Python dict emulation. Returns the value of the act_as_dict instance attribute once called
+  - `act_as_dict(self)` -> Bound method to activate/deactivate Python dict emulation. Returns the value of the act_as_dict instance attribute as a boolean value once called
   
-  - `@property
-    typeof(self)` -> The ConstantDict class is built so that it can emulate Python dicts.
-    To pass isinstance() check, use ConstantDict.typeof() as first argument, after having called act_as_dict() on the container
-    
-    
-   
+  - `typeof(self)` -> The ConstantDict class is built so that it can emulate Python dicts.
+    To pass `isinstance()` check, use `ConstantDict.typeof()` as first argument, after having called act_as_dict() on the container
+
+### NamedTuple() - Docs
+
+This class implement a named tuple, that is, a container that behaves like a common tuple, but has named arguments.
+
+The tuple works as described below:
+
+  - Create tuple :
+    >>> test = NamedTuple(key1='var1', key2='var2', ...)
+
+  - Find element in tuple :
+    >>> test.find(key1)
+        'var1'
+
+  - Get tuple keys :
+    >>> test.keys()
+        [key1, key2, ...]
+
+  - Get tuple elements :
+    >>> test.items()
+        ['var1', 'var2', ...]
+  
+  - Get a single element :
+    >>> test[0] 
+    >>> test["key1"]
+        'var1'
+        
+#### Methods
+
+  - `create_tuple(self)` -> This method, meant for internal use, is called after `__init__` and has the job of
+   initializizing the NamedTuple arguments and to set the needed parameters for the container to work properly
+  
+  - `isfloat(value)` -> This method, meant for internal use, is called by the NamedTuple() to determin wheter a value is a float or not
+  
+  - `find(self, item)` -> Finds an element in tuple with the given key
+
+  - `items(self)` -> Returns all the values inside the tuple as a list object
+  
+  - `keys(self)` -> Returns all the keys inside the tuple as a list object
+  
+  - `typeof(self)` -> Returns the type of the tuple depending on the `_act_as_tuple` object attribute
+  
+  - `act_as_tuple(self)` -> Bound method to activate/deactivate Python tuple emulation. Returns the value of the `_act_as_tuple` instance attribute as a boolean value once called
+  
+  
