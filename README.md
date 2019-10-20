@@ -59,21 +59,26 @@ This class implement a named tuple, that is, a container that behaves like a com
 The tuple works as described below:
 
   - Create tuple :
+  
     `>>> test = NamedTuple(key1='var1', key2='var2', ...)`
 
   - Find element in tuple :
+  
     `>>> test.find(key1)`
         `'var1'`
 
   - Get tuple keys :
+  
     `>>> test.keys()`
         `[key1, key2, ...]`
 
   - Get tuple elements :
+  
     `>>> test.items()`
         `['var1', 'var2', ...]`
   
   - Get a single element :
+  
     `>>> test[0] `
     `>>> test["key1"]`
         `'var1'`
