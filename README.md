@@ -30,7 +30,7 @@ This mapping mostly behaves like an usual python dict, except for  4 things:
 
   - Once a key-value pair is inserted, it cannot be removed anymore
   - Existing key-value pairs cannot be overwritten
-  - Attempting to access the dict attribute will fail
+  - Attempting to access the `__dict__` attribute will fail
   - Attempting to access dir(object) will fail
 
 These characteristics have been specifically implemented to avoid item's accidental overwrite/deletion.
@@ -47,10 +47,10 @@ switch to Java :)
 
 ### Methods
 
-  - act_as_dict(self) -> Bound method to activate/deactivate Python dict emulation. Returns the value of the act_as_dict instance attribute once called
+  - `act_as_dict(self)` -> Bound method to activate/deactivate Python dict emulation. Returns the value of the act_as_dict instance attribute once called
   
-  - @property
-    typeof(self) -> The ConstantDict class is built so that it can emulate Python dicts.
+  - `@property
+    typeof(self)` -> The ConstantDict class is built so that it can emulate Python dicts.
     To pass isinstance() check, use ConstantDict.typeof() as first argument, after having called act_as_dict() on the container
     
     
