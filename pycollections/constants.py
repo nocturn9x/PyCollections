@@ -1,6 +1,7 @@
-from pycollectionserrors.exceptions import Errors as errors
+from from py_collections import exceptions
 import inspect
 
+# TODO -> Add docstrings and document
 
 class Const:
 
@@ -9,7 +10,7 @@ class Const:
 
     @property
     def __dict__(self):
-        raise errors.AccessDeniedError("Access Denied")
+        raise AccessDeniedError("Access Denied")
 
     def __contains__(self, key):
         dict.__contains__(self.__d, key)
@@ -18,7 +19,7 @@ class Const:
         if inspect.stack()[1][3] != "__init__":
             if isinstance(value, int) or isinstance(value, float):
                 if key in self.__d:
-                    raise errors.ConstantError(
+                    raise ConstantError(
                         f"cannot reassign values for constants, value for {key} is already {self.__d[key]}")
                 else:
                     self.__d[key] = value
@@ -35,4 +36,4 @@ class Const:
             raise AttributeError(f"object of type '{type(self)}' has no attribute '{key}'")
 
     def __dir__(self):
-        raise errors.AccessDeniedError("Access Denied")
+        raise AccessDeniedError("Access Denied")
