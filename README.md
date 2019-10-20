@@ -35,7 +35,7 @@ This mapping mostly behaves like an usual python dict, except for  4 things:
   - Once a key-value pair is inserted, it cannot be removed anymore
   - Existing key-value pairs cannot be overwritten
   - Attempting to access the `__dict__` attribute will fail
-  - Attempting to access dir(object) will fail
+  - Attempting to access `dir(object)` will fail
 
 These characteristics have been specifically implemented to avoid item's accidental overwrite/deletion.
 
@@ -43,9 +43,9 @@ Let's face the apexes at the beginning: In pure Python, it's impossible to imple
 
 You might be wondering, "Soo, how does this class even exists? Didn't you just say it's impossible?!"
 
-Yeah, it is, and actually this mapping is not truly immutable: it just overwrites any known standard method to access mappings values and edit them, but it is still possible to edit those values by accessing the class attribute via {object}_ConstantDict__container.
+Yeah, it is, and actually this mapping is not truly immutable: it just overwrites any known standard method to access mappings values and edit them, but it is still possible to edit those values by accessing the class attribute `{object}_ConstantDict__container`.
 
-This mapping is indeed intended to reduce the probability of ACCIDENTALLY overwriting those
+This mapping is indeed intended to reduce the probability of **ACCIDENTALLY** overwriting those
 values, if you are looking for immutable objects natively, just
 switch to Java :)
 
@@ -54,7 +54,7 @@ switch to Java :)
   - `act_as_dict(self)` -> Bound method to activate/deactivate Python dict emulation. Returns the value of the act_as_dict instance attribute as a boolean value once called
   
   - `typeof(self)` -> The ConstantDict class is built so that it can emulate Python dicts.
-    To pass `isinstance()` check, use `ConstantDict.typeof()` as first argument, after having called act_as_dict() on the container
+    To pass `isinstance()` check, use `ConstantDict.typeof()` as first argument, after having called `act_as_dict()` on the container
 
 ### NamedTuple() - Docs
 
@@ -95,9 +95,9 @@ The tuple works as described below:
 #### Methods
 
   - `create_tuple(self)` -> This method, meant for internal use, is called after `__init__` and has the job of
-   initializizing the NamedTuple arguments and to set the needed parameters for the container to work properly
+   initializizing the `NamedTuple` arguments and to set the needed parameters for the container to work properly
   
-  - `isfloat(value)` -> This method, meant for internal use, is called by the NamedTuple() to determin wheter a value is a float or not
+  - `isfloat(value)` -> This method, meant for internal use, is called by the `NamedTuple` class to determine wheter a given value is a float or not
   
   - `find(self, item)` -> Finds an element in tuple with the given key
 
