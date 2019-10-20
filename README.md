@@ -59,24 +59,24 @@ This class implement a named tuple, that is, a container that behaves like a com
 The tuple works as described below:
 
   - Create tuple :
-    >>> test = NamedTuple(key1='var1', key2='var2', ...)
+    `>>> test = NamedTuple(key1='var1', key2='var2', ...)`
 
   - Find element in tuple :
-    >>> test.find(key1)
-        'var1'
+    `>>> test.find(key1)`
+        `'var1'`
 
   - Get tuple keys :
-    >>> test.keys()
-        [key1, key2, ...]
+    `>>> test.keys()`
+        `[key1, key2, ...]`
 
   - Get tuple elements :
-    >>> test.items()
-        ['var1', 'var2', ...]
+    `>>> test.items()`
+        `['var1', 'var2', ...]`
   
   - Get a single element :
-    >>> test[0] 
-    >>> test["key1"]
-        'var1'
+    `>>> test[0] `
+    `>>> test["key1"]`
+        `'var1'`
         
 #### Methods
 
@@ -94,5 +94,3 @@ The tuple works as described below:
   - `typeof(self)` -> Returns the type of the tuple depending on the `_act_as_tuple` object attribute
   
   - `act_as_tuple(self)` -> Bound method to activate/deactivate Python tuple emulation. Returns the value of the `_act_as_tuple` instance attribute as a boolean value once called
-  
-  
