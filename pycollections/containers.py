@@ -1,5 +1,6 @@
-from py_collections.exceptions import *
 import threading
+from .errors.exceptions import *
+from ast import literal_eval as make_collection
 
 
 class ConstantDict(dict):
@@ -101,7 +102,7 @@ class ConstantDict(dict):
            >>> d
               {'foo':'bar'}
            >>> del d["foo"]
-             raises  ConstantError"""
+             raises  Error"""
 
         raise InvalidOperation("Operation not permitted")
 
@@ -158,19 +159,32 @@ class NamedTuple(tuple):
         self.kwargs = kwargs
         self._container = None  # Tuple to be initialized yet
         self._dict = dict()  # Here the key-word couples arguments will be stored
-        self._indexes = dict()  # The numerical indexes for every item in the tuple are saved with their corresponding keyword
+        self._indexes = dict()  # Numerical indexes for every item in the tuple are saved with their keyword
         self._as_tuple = False
         if kwargs:
+            for key, value in kwargs.items():
+                if isinstance(value, str) and "<" in value:
+                    kwargs[key] = value.replace("<", "$")
             self.formatted_args = "("
             for index, key in enumerate(kwargs):
-                if not index + 1 == len(kwargs):
-                    if isinstance(kwargs[key], int) or isinstance(kwargs[key], float):
-                        self.formatted_args += f"{key}={kwargs[key]}, "
+                if isinstance(kwargs[key], int) or isinstance(kwargs[key], float):
+                    if not index + 1 == len(kwargs):
+                        self.formatted_args += f"{key}={kwargs[key]}/"
                     else:
-                        self.formatted_args += f"{key}='{kwargs[key]}', "
-                else:
-                    if isinstance(kwargs[key], int) or isinstance(kwargs[key], float):
                         self.formatted_args += f"{key}={kwargs[key]}"
+                elif isinstance(kwargs[key], tuple) or isinstance(kwargs[key], list) or isinstance(kwargs[key], set) or isinstance(kwargs[key], dict):
+                    if not index + 1 == len(kwargs):
+                        self.formatted_args += f"<{key}={kwargs[key]}/"
+                    else:
+                        self.formatted_args += f"<{key}={kwargs[key]}"
+                elif isinstance(kwargs[key], int) or isinstance(kwargs[key], float):
+                    if not index + 1 == len(kwargs):
+                        self.formatted_args += f"{key}={kwargs[key]}/"
+                    else:
+                        self.formatted_args += f"{key}={kwargs[key]}"
+                else:
+                    if not index + 1 == len(kwargs):
+                        self.formatted_args += f"{key}='{kwargs[key]}'/"
                     else:
                         self.formatted_args += f"{key}='{kwargs[key]}'"
             self.formatted_args += ")"
@@ -182,14 +196,22 @@ class NamedTuple(tuple):
         """This function memorizes all the required
         information for the container to work properly"""
 
-        args = self.formatted_args.replace(" ", "").replace("(", "").replace("'", "").replace(")", "").split(",")
-        for arg in args:
-            key, value = arg.split("=")
-            if value.isdigit():
-                value = int(value)
-            elif self.isfloat(value):
-                value = self.isfloat(value)
-            self._dict[key] = value
+        iter_args = self.formatted_args[1:-1].split("/")
+        for arg in iter_args:
+            if arg and "<" in arg:
+                from_index = arg.find("=") + 1
+                key = arg[0:from_index - 1].replace("<", "")
+                self._dict[key] = make_collection(arg[from_index:])
+            elif arg:
+                try:
+                    key, value = arg.split("=")
+                except ValueError:
+                    break
+                if value.isdigit():
+                    value = int(value)
+                elif self.isfloat(value):
+                    value = self.isfloat(value)
+                self._dict[key] = value
         self._container = tuple(item[1] for item in self._dict.items())
         for item in self._dict.items():
             self._indexes[item[0]] = self._container.index(item[1])
@@ -202,10 +224,10 @@ class NamedTuple(tuple):
             return False
 
     def __str__(self):
-        return self.formatted_args
+        return self.formatted_args.replace("<", "").replace("$", "<").replace("/", ", ")
 
     def __repr__(self):
-        return self.formatted_args
+        return self
 
     def __getitem__(self, index):
         if isinstance(index, int):
