@@ -174,9 +174,9 @@ class NamedTuple(tuple):
                         self.formatted_args += f"{key}={kwargs[key]}"
                 elif isinstance(kwargs[key], tuple) or isinstance(kwargs[key], list) or isinstance(kwargs[key], set) or isinstance(kwargs[key], dict):
                     if not index + 1 == len(kwargs):
-                        self.formatted_args += f"<{key}={kwargs[key]}/"
+                        self.formatted_args += b'\00'.decode('utf-8') + f"{key}={kwargs[key]}/"
                     else:
-                        self.formatted_args += f"<{key}={kwargs[key]}"
+                        self.formatted_args += b'\00'.decode('utf-8') + f"{key}={kwargs[key]}"
                 elif isinstance(kwargs[key], int) or isinstance(kwargs[key], float):
                     if not index + 1 == len(kwargs):
                         self.formatted_args += f"{key}={kwargs[key]}/"
@@ -198,7 +198,8 @@ class NamedTuple(tuple):
 
         iter_args = self.formatted_args[1:-1].split("/")
         for arg in iter_args:
-            if arg and "<" in arg:
+            if arg and b'\00'.decode('utf-8') in arg:
+                arg = arg.replace(b'\00'.decode("utf-8"), "")
                 from_index = arg.find("=") + 1
                 key = arg[0:from_index - 1].replace("<", "")
                 self._dict[key] = make_collection(arg[from_index:])
@@ -211,7 +212,7 @@ class NamedTuple(tuple):
                     value = int(value)
                 elif self.isfloat(value):
                     value = self.isfloat(value)
-                self._dict[key] = value
+                self._dict[key] = value.strip("'") if isinstance(value, str) else value
         self._container = tuple(item[1] for item in self._dict.items())
         for item in self._dict.items():
             self._indexes[item[0]] = self._container.index(item[1])
@@ -223,11 +224,14 @@ class NamedTuple(tuple):
         else:
             return False
 
+    def as_dict(self):
+        return self._dict
+
     def __str__(self):
-        return self.formatted_args.replace("<", "").replace("$", "<").replace("/", ", ")
+        return self.formatted_args.replace(b'\00'.decode('utf-8'), "").replace("/", ", ")
 
     def __repr__(self):
-        return self
+        return self.__str__()
 
     def __getitem__(self, index):
         if isinstance(index, int):
@@ -235,7 +239,7 @@ class NamedTuple(tuple):
         elif index in self._indexes:
             return self._dict[index]
         else:
-            raise IndexError("item or index not in tuple")
+            raise KeyError(f"{index}")
 
     def __iter__(self):
         return self._container.__iter__()
@@ -620,3 +624,19 @@ class RLockedList(LockedList):
             else:
                 self._as_list = True
             return self._as_list
+
+
+class FixedList(list):
+
+    def __init__(self, *args, size_limit=None):
+        self._container = []
+        self.args = args
+        self.size_limit = size_limit
+
+    def __str__(self):
+        return self._container.__str__()
+
+    def __repr__(self):
+        return self.__str__()
+
+
