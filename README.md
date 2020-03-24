@@ -1,6 +1,7 @@
 # PyCollections
 PyCollections is a Python 3 library that implements some useful containers (tuples, dictionaries, lists)
 
+# This project is a toy implementation and the collections are not as memory efficient as the default built in types, also, this project is not really maintained 
 
 ### Note
 
